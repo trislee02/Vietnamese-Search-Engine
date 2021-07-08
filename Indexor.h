@@ -8,13 +8,19 @@
 #include <time.h>
 #include "Constant.h"
 
-WData* mkWordArray(SList token, int& n);
+lexicon mkstopwordLex(const char* stopwordfname);
+
+WData* makeWordArray2(SList token, int& n, lexicon stopwordlex);
+
+WData* mkWordArray(SList token, int& n, lexicon stopwordlex);
 
 bool saveDoc2DocIndexor(FILE* fdocidxor, DocData docdata);
 
 bool saveDocIndexor(const char* docidxorfname, DocIndexor docidxor);
 
 WAData* saveBarrel(FILE* fbarrel, WData* wordarray, int n, int& docAdd);
+
+void saveLex(FILE* flex, lexicon lex);
 
 void adtWAdd2Lex(lexicon& lex, int docId, WAData* addressArray, int n);
 

@@ -1,15 +1,32 @@
 #include "Indexor.h"
 
-/*	Make word array that contains info of words from a token
-*	Return a word array
+/*	Make stopword lexicon
 */
-WData* mkWordArray(SList token, int &n) {
+lexicon mkstopwordLex(const char* stopwordfname) {
+	lexicon swlex; 
+	init(swlex);
+	wchar_t* fname = chr2wchr(stopwordfname);
+	FILE* fstopword;
+	_wfopen_s(&fstopword, fname, L"r, ccs=UTF-16LE");
+	free(fname);
+	wchar_t* line;
+	while (!feof(fstopword)) {
+		line = getline(fstopword);
+		addString(swlex, line, NULL);
+		free(line);
+	}
+	return swlex;
+}
+
+/*	Make word array (Method 1) - Simple
+*/
+WData* makeWordArray1(SList token, int& n) {
 	if (isEmpty(token)) return NULL;
 	SList dupTok;
 	listcpy(dupTok, token, wcharsize);
 	mergesort(dupTok, cmpwchar, 1);
 	float unit = 1.0 / dupTok.size;
-	WData* wordArray = (WData*) malloc(sizeof(WData) * dupTok.size);
+	WData* wordArray = (WData*)malloc(sizeof(WData) * dupTok.size);
 	wordArray[0].tf = unit;
 	wordArray[0].word = new wchar_t[wcslen((wchar_t*)(dupTok.head->data)) + 1];
 	wcscpy(wordArray[0].word, (wchar_t*)(dupTok.head->data));
@@ -17,7 +34,7 @@ WData* mkWordArray(SList token, int &n) {
 	SNode* cur = dupTok.head->next;
 	for (; cur; cur = cur->next) {
 		wchar_t* word = (wchar_t*)cur->data;
-		if (wcscmp(wordArray[n - 1].word, word) == 0) 
+		if (wcscmp(wordArray[n - 1].word, word) == 0)
 			wordArray[n - 1].tf += unit;
 		else {
 			wordArray[n].word = new wchar_t[wcslen(word) + 1];
@@ -30,6 +47,384 @@ WData* mkWordArray(SList token, int &n) {
 		wordArray = (WData*)realloc(wordArray, n * sizeof(WData));
 	removeAll(dupTok, rmvwchar);
 	return wordArray;
+}
+
+wchar_t* mergeTokens(SNode* token1, SNode* token2) {
+	wchar_t* s1 = (wchar_t*)token1->data;
+	wchar_t* s2 = (wchar_t*)token2->data;
+	wchar_t* strmerge;
+	if (s1 && s2) {
+		strmerge = new wchar_t[wcslen(s1) + wcslen(s2) + 2];
+		wcscpy(strmerge, s1);
+		wcscat(strmerge, L" ");
+		wcscat(strmerge, s2);
+		return strmerge;
+	}
+	if (s1) {
+		strmerge = new wchar_t[wcslen(s1) + 1];
+		wcscpy(strmerge, s1);
+		return strmerge;
+	}
+	if (s2) {
+		strmerge = new wchar_t[wcslen(s2) + 1];
+		wcscpy(strmerge, s2);
+		return strmerge;
+	}
+	strmerge = new wchar_t;
+	strmerge[0] = L'\0';
+	return strmerge;
+}
+
+bool cmpTokens(SNode* token1, SNode* token2) {
+	wchar_t* s1 = (wchar_t*)token1->data;
+	wchar_t* s2 = (wchar_t*)token2->data;
+	if (!s1 || !s2) return false;
+	if (wcscmp(s1, s2) == 0) return true;
+	return false;
+}
+
+bool cmpConsecTokens(SNode* token1, SNode* token2, SNode* token3, SNode* token4) {
+	wchar_t* s1 = (wchar_t*)token1->data;
+	wchar_t* s2 = (wchar_t*)token2->data;
+	wchar_t* s3 = (wchar_t*)token3->data;
+	wchar_t* s4 = (wchar_t*)token4->data;
+	if (!s1 || !s2 || !s3 || !s4) return false;
+	if (wcscmp(s1, s3) == 0 && wcscmp(s2, s4) == 0) return true;
+	return false;
+}
+
+bool isTokenSW(lexicon lex, SNode* token) {
+	wchar_t* word = (wchar_t*)token->data;
+	if (findString(lex, word)) return true;
+	return false;
+}
+
+WData* makeWordArray21(SList token, int& n, lexicon stopwordlex) {
+	if (isEmpty(token)) return NULL;
+
+	SList dupTok;
+	listcpy(dupTok, token, wcharsize);
+	SList cleanTokens;
+	initialize(cleanTokens);
+
+	for (SNode* cur = dupTok.head; cur; cur = cur->next) {
+		if (!cur->data) continue;
+		//Merge two consecutive tokens & find in stop words list
+		bool isSW = false;
+		if (cur->next) {
+			wchar_t* strmerge = mergeTokens(cur, cur->next);
+			tnode* temp = findString(stopwordlex, strmerge);
+			if (temp) {
+				free(cur->data);
+				free(cur->next->data);
+				cur->data = NULL;
+				cur->next->data = NULL;
+				isSW = true;
+			}
+			free(strmerge);
+		}
+
+		int occurrences = 0;
+		if (!isSW) {
+			if (cur->next && cur->next->next && cur->next->next->next) {
+				//Check for	occurrence of two consecutive syllables
+				for (SNode* cur2 = cur->next->next; cur2 && cur2->next; cur2 = cur2->next) {
+					if (cmpConsecTokens(cur, cur->next, cur2, cur2->next)) {
+						occurrences++;
+						free(cur2->data);
+						free(cur2->next->data);
+						cur2->data = NULL;
+						cur2->next->data = NULL;
+						cur2 = cur2->next;
+						isSW = false;
+					}
+				}
+			}
+		}
+		//Check current word is a stop word
+		if (!isSW && occurrences == 0) {
+			//Check for that word is stop word
+			tnode* temp = findString(stopwordlex, (wchar_t*)cur->data);
+			if (temp) {
+				isSW = true;
+				free(cur->data);
+				cur->data = NULL;
+			}
+		}
+
+		//Add to clean tokens list
+		if (!isSW) {
+			if (occurrences == 0) {
+				wchar_t* temp = (wchar_t*)cur->data;
+				removeDiacritic(temp);
+				addHead(cleanTokens, temp, wcharsize(temp));
+			}
+			else {
+				wchar_t* temp1 = (wchar_t*)cur->data;
+				wchar_t* temp2 = (wchar_t*)cur->next->data;
+				removeDiacritic(temp1);
+				removeDiacritic(temp2);
+				for (int i = 0; i <= occurrences; i++) {
+					addHead(cleanTokens, temp1, wcharsize(temp1));
+					addHead(cleanTokens, temp2, wcharsize(temp2));
+				}
+				cur = cur->next;
+				if (!cur) break;
+			}
+		}
+	}
+	printf("-------------------------------------\n");
+	printList(cleanTokens, printwchar);
+	printf("tokens = %d\ncleanTokens = %d", token.size, cleanTokens.size);
+	removeAll(dupTok, rmvwchar);
+	removeAll(cleanTokens, rmvwchar);
+	return NULL;
+}
+
+WData* makeWordArray22(SList token, int& n, lexicon stopwordlex) {
+	if (isEmpty(token)) return NULL;
+
+	SList dupTok;
+	listcpy(dupTok, token, wcharsize);
+	int totalwords = dupTok.size;
+	SList cleanTokens;
+	initialize(cleanTokens);
+	wchar_t rmvword[] = L"--";
+	int rmvwordcount = 0;
+	//printList(dupTok, printwchar);
+	//printf("\n");
+	for (SNode* cur = dupTok.head; cur; cur = cur->next) {
+		if (!cur->data) continue;
+		//Merge two consecutive tokens & find in stop words list
+		bool isSW = false;
+		if (cur->next) {
+			wchar_t* strmerge = mergeTokens(cur, cur->next);
+			tnode* temp = findString(stopwordlex, strmerge);
+			if (temp) {
+				free(cur->data);
+				free(cur->next->data);
+				cur->data = NULL;
+				cur->next->data = NULL;
+				//addHead(cleanTokens, rmvword, 6);
+				//addHead(cleanTokens, rmvword, 6);
+				//addTail(cleanTokens, rmvword, 6);
+				//addTail(cleanTokens, rmvword, 6);
+				rmvwordcount += 2;
+				isSW = true;
+			}
+			free(strmerge);
+		}
+
+		int occurrences = 0;
+		int occurrencesfirst = 0;
+		int occurrencessecond = 0;
+		//Check current word is a stop word
+		if (!isSW) {
+			//Check for that word is stop word
+			tnode* temp = findString(stopwordlex, (wchar_t*)cur->data);
+			if (temp) isSW = true;
+			if (isSW) {
+				if (cur->next && cur->next->next && cur->next->next->next) {
+					//Check for	occurrence of two consecutive syllables
+					bool isFstTokenSW = isTokenSW(stopwordlex, cur);
+					bool isSecTokenSW = isTokenSW(stopwordlex, cur->next);
+					for (SNode* cur2 = cur->next->next; cur2 && cur2->next; cur2 = cur2->next) {
+						if (cmpConsecTokens(cur, cur->next, cur2, cur2->next)) {
+							occurrences++;
+							isSW = false;
+							//break;
+						}
+						if (isFstTokenSW && cmpTokens(cur->next, cur2->next)) 
+							occurrencessecond++;
+						if (isSecTokenSW && cmpTokens(cur, cur2)) 
+							occurrencesfirst++;
+					}
+				}
+			}
+			if (isSW) {
+				free(cur->data);
+				cur->data = NULL;
+				//addHead(cleanTokens, rmvword, 6);
+				//addTail(cleanTokens, rmvword, 6);
+				rmvwordcount += 1;
+			}
+			else {
+				if (occurrencesfirst != 0 && occurrencessecond != 0) {
+					double firstmatchTF = occurrences / ((double)occurrencesfirst);
+					double tf = ((double)occurrences) / totalwords;
+					//wprintf(L"%ls %ls - tf = %lf, fm = %lf\n", (wchar_t*)cur->data, (wchar_t*)cur->next->data, tf, firstmatchTF);
+					if (firstmatchTF < THRESHOLD) {
+						wchar_t* temp = (wchar_t*)cur->next->data;
+						removeDiacritic(temp);
+						//wprintf(L"%ls [Removed]\n", temp);
+						free(cur->next->data);
+						cur->next->data = NULL;
+						//addHead(cleanTokens, rmvword, 6);
+						//addTail(cleanTokens, rmvword, 6);
+						isSW = true;
+						rmvwordcount += 1;
+					}
+				}
+				if (!isSW && occurrencessecond != 0) {
+					double secondmatchTF = occurrences / ((double)occurrencessecond);
+					double tf = ((double)occurrences) / totalwords;
+					//wprintf(L"%ls %ls - tf = %lf, sm = %lf\n", (wchar_t*)cur->data, (wchar_t*)cur->next->data, tf, secondmatchTF);
+					if (secondmatchTF < THRESHOLD) {
+						wchar_t* temp = (wchar_t*)cur->data;
+						removeDiacritic(temp);
+						//wprintf(L"%ls [Removed]\n", temp);
+						free(cur->data);
+						cur->data = NULL;
+						//addHead(cleanTokens, rmvword, 6);
+						//addTail(cleanTokens, rmvword, 6);
+						isSW = true;
+						rmvwordcount += 1;
+					}
+				}
+			}
+		}
+		
+		//Add to clean tokens list
+		if (!isSW) {
+			if (occurrences == 0) {
+				wchar_t* temp = (wchar_t*)cur->data;
+				removeDiacritic(temp);
+				addHead(cleanTokens, temp, wcharsize(temp));
+				//addTail(cleanTokens, temp, wcharsize(temp));
+			}
+			else {
+				wchar_t* temp1 = (wchar_t*)cur->data;
+				wchar_t* temp2 = (wchar_t*)cur->next->data;
+				removeDiacritic(temp1);
+				removeDiacritic(temp2);
+				for (int i = 0; i < 1; i++) {
+					addHead(cleanTokens, temp1, wcharsize(temp1));
+					addHead(cleanTokens, temp2, wcharsize(temp2));
+					//addTail(cleanTokens, temp1, wcharsize(temp1));
+					//addTail(cleanTokens, temp2, wcharsize(temp2));
+				}
+				cur = cur->next;
+				if (!cur) break;
+			}
+		}
+	}
+	//printf("-------------------------------------\n");
+	printList(cleanTokens, printwchar);
+	printf("\n");
+	printf("tokens = %d, cleanTokens = %d, remove words = %d\n", token.size, cleanTokens.size, rmvwordcount);
+	removeAll(dupTok, rmvwchar);
+	WData* res = makeWordArray1(cleanTokens, n);
+	removeAll(cleanTokens, rmvwchar);
+	return res;
+}
+
+WData* makeWordArray23(SList token, int& n, lexicon stopwordlex) {
+	if (isEmpty(token)) return NULL;
+
+	SList dupTok;
+	listcpy(dupTok, token, wcharsize);
+	SList cleanTokens;
+	initialize(cleanTokens);
+	wchar_t rmvword[] = L"--";
+
+	int* markArray = new int[dupTok.size];
+	int rmvwordcount = 0;
+
+	for (SNode* cur = dupTok.head; cur; cur = cur->next) {
+		if (!cur->data) continue;
+		//Merge two consecutive tokens & find in stop words list
+		bool isSW = false;
+		if (cur->next) {
+			wchar_t* strmerge = mergeTokens(cur, cur->next);
+			tnode* temp = findString(stopwordlex, strmerge);
+			if (temp) {
+				free(cur->data);
+				free(cur->next->data);
+				cur->data = NULL;
+				cur->next->data = NULL;
+				//addHead(cleanTokens, rmvword, 6);
+				//addHead(cleanTokens, rmvword, 6);
+				addTail(cleanTokens, rmvword, 6);
+				addTail(cleanTokens, rmvword, 6);
+				rmvwordcount += 2;
+				isSW = true;
+			}
+			free(strmerge);
+		}
+
+		int occurrences = 0;
+
+		//Check current word is a stop word
+		if (!isSW) {
+			//Check for that word is stop word
+			tnode* temp = findString(stopwordlex, (wchar_t*)cur->data);
+			if (temp) isSW = true;
+			if (isSW) {
+				if (cur->next && cur->next->next && cur->next->next->next) {
+					//Check for	occurrence of two consecutive syllables
+					for (SNode* cur2 = cur->next->next; cur2 && cur2->next; cur2 = cur2->next) {
+						if (cmpConsecTokens(cur, cur->next, cur2, cur2->next)) {
+							occurrences++;
+							isSW = false;
+							break;
+						}
+					}
+				}
+			}
+			if (isSW) {
+				free(cur->data);
+				cur->data = NULL;
+				//addHead(cleanTokens, rmvword, 6);
+				addTail(cleanTokens, rmvword, 6);
+				rmvwordcount += 1;
+			}
+		}
+
+		//Add to clean tokens list
+		if (!isSW) {
+			if (occurrences == 0) {
+				wchar_t* temp = (wchar_t*)cur->data;
+				removeDiacritic(temp);
+				//addHead(cleanTokens, temp, wcharsize(temp));
+				addTail(cleanTokens, temp, wcharsize(temp));
+			}
+			else {
+				wchar_t* temp1 = (wchar_t*)cur->data;
+				wchar_t* temp2 = (wchar_t*)cur->next->data;
+				removeDiacritic(temp1);
+				removeDiacritic(temp2);
+				for (int i = 0; i < occurrences; i++) {
+					//addHead(cleanTokens, temp1, wcharsize(temp1));
+					//addHead(cleanTokens, temp2, wcharsize(temp2));
+					addTail(cleanTokens, temp1, wcharsize(temp1));
+					addTail(cleanTokens, temp2, wcharsize(temp2));
+				}
+				cur = cur->next;
+				if (!cur) break;
+			}
+		}
+	}
+	printf("-------------------------------------\n");
+	printList(cleanTokens, printwchar);
+	printf("\n");
+	printf("tokens = %d\ncleanTokens = %d\nremove sw = %d\n", token.size, cleanTokens.size, rmvwordcount);
+	removeAll(dupTok, rmvwchar);
+	removeAll(cleanTokens, rmvwchar);
+	return NULL;
+}
+
+/*	Make word array (Method 2) - Advanced
+*/
+WData* makeWordArray2(SList token, int& n, lexicon stopwordlex) {
+	//makeWordArray22(token, n, stopwordlex);
+	return makeWordArray22(token, n, stopwordlex);
+}
+
+/*	Make word array that contains info of words from a token
+*	Return a word array
+*/
+WData* mkWordArray(SList token, int &n, lexicon stopwordlex) {
+	return makeWordArray2(token, n, stopwordlex);
 }
 
 /*	Append new doc info at the end of doc indexor with an opened file
@@ -539,7 +934,7 @@ bool rewriteBarrelandDocIdxor(const char* docidxorfname, const char* barrelfname
 	return status;
 }
 
-WData* preprocessFile(char* filename, int& nword) {
+WData* preprocessFile(char* filename, int& nword, lexicon stopwordlex) {
 	//Read file
 	clock_t begin = clock();
 	wchar_t* text = readFile(filename);
@@ -552,7 +947,7 @@ WData* preprocessFile(char* filename, int& nword) {
 	
 	//Make word array
 	nword = 0;
-	WData* wordArray = mkWordArray(wordList, nword);
+	WData* wordArray = mkWordArray(wordList, nword, stopwordlex);
 	removeAll(wordList, rmvwchar);
 	return wordArray;
 }
@@ -569,7 +964,7 @@ void indexing1(lexicon& mainlex, char**& listfile) {
 	FILE* fbarrel = fopen(BARRELS_FILES, "wb");
 	FILE* findex = fopen(INDEX_FILES, "r");
 	FILE* fdocidxor = fopen(DOC_INDEXOR, "wb");
-
+	lexicon swlex = mkstopwordLex(STOPWORD_FILES);
 	int nfile = 0;
 	listfile = readCorpus(findex, nfile);
 	fclose(findex);
@@ -582,7 +977,7 @@ void indexing1(lexicon& mainlex, char**& listfile) {
 
 		clock_t begin = clock();
 		int nword = 0;
-		WData* wordArray = preprocessFile(listfile[filei], nword);
+		WData* wordArray = preprocessFile(listfile[filei], nword, swlex);
 		/*printf("n = %d\n", n);
 		printf("wordArray:\n");
 		printWordArray(wordArray, n);
@@ -639,6 +1034,7 @@ void indexing2(lexicon& mainlex, char**& listfile) {
 	FILE* findex = fopen(INDEX_FILES, "r");
 	FILE* fdocidxor = fopen(DOC_INDEXOR, "wb");
 	FILE* fbarrelindexor = fopen(BARRELS_INDEXOR_FILES, "wb+");
+	lexicon swlex = mkstopwordLex(STOPWORD_FILES);
 
 	int nfile = 0;
 	listfile = readCorpus(findex, nfile);
@@ -652,7 +1048,7 @@ void indexing2(lexicon& mainlex, char**& listfile) {
 
 		clock_t begin = clock();
 		int nword = 0;
-		WData* wordArray = preprocessFile(listfile[filei], nword);
+		WData* wordArray = preprocessFile(listfile[filei], nword, swlex);
 		
 		//Write to barrel
 		int docAdd = 0;
@@ -732,13 +1128,13 @@ int indexNewFile(char* dir, DocIndexor& docidxor, lexicon& lex) {
 	FILE* fbarrelindexor = fopen(BARRELS_INDEXOR_FILES, "ab+");
 	FILE* fdocidxor = fopen(DOC_INDEXOR, "ab");
 	FILE* flex = fopen(LEXICON_FILES, "wb");
-
+	lexicon swlex = mkstopwordLex(STOPWORD_FILES);
 	DocData* pdocData = addDoc2DocIndexor(dir, docidxor);
 	int nword = 0;
 	wchar_t* tempfname = chr2wchr(dir);
 	wprintf(L"Indexing... FILE = %ls\n", tempfname);
 	free(tempfname);
-	WData* wordArray = preprocessFile(dir, nword);
+	WData* wordArray = preprocessFile(dir, nword, swlex);
 	int docAdd = 0;
 	WAData* addressArray = saveBarrel(fbarrel, wordArray, nword, docAdd);
 	freeWordArray(wordArray, nword);

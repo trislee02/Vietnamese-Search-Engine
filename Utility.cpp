@@ -8,7 +8,7 @@ int cmpwchar(void* a, void* b) {
 
 void printwchar(void* a) {
     wchar_t* str = (wchar_t*)a;
-    wprintf(L"1-|%ls|\n", str);
+    wprintf(L"%ls ", str);
 }
 
 int wcharsize(void* a) {
