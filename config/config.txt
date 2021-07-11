@@ -1,0 +1,14 @@
+index-file			index/index.txt
+stopwords-file		index/stopwords.txt
+barrels-filename		metadata/barrels-sophis.db
+barrel-indexor-filename	metadata/barrelidxor-sophis.db
+lexicon-filename		metadata/lexicon-sophis.db
+doc-indexor-filename	metadata/doc-indexor-sophis.db
+threshold-stop-word	0.51
+threshold-two-stop-word	0.8
+k-best-doc		20
+distance-minimal-interval	10
+write-searching-log		1
+exponential-matched-token	10
+distance-ordered-pair	2
+exponential-proximity	10

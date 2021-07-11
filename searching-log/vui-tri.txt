@@ -1,0 +1,13 @@
+Found 3 files
+-------------------------------
+Doc directory = corpus\doc2.txt, score = 0.200000
+vui - tf: 0.200000
+4 
+-------------------------------
+Doc directory = corpus\doc3.txt, score = 0.166667
+vui - tf: 0.166667
+5 
+-------------------------------
+Doc directory = corpus/Tu them/doc1.txt, score = 0.005291
+tri - tf: 0.005291
+89 
