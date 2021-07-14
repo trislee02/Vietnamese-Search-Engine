@@ -152,8 +152,8 @@ void writeSearchingLog(const char* logfname, const char* docidxorfname, FILE* fb
 	for (SNode* cur = QDocList.head; cur; cur = cur->next) {
 		SDData* sddata = (SDData*)cur->data;
 		DocData docdata = *getDocDatabyId(docidxor.docarray, docidxor.ndocs, sddata->docId);
-		fprintf(flog, "-------------------------------\n", sddata->docId);
-		fprintf(flog, "DocId = %d, Doc directory = %s, score = %f\n", docdata.docId, docdata.docdir, sddata->score);
+		fprintf(flog, "\n", sddata->docId);
+		fprintf(flog, "%s, %f\n", docdata.docdir, sddata->score);
 		for (int i = 0; i < sddata->nword; i++) {
 			int docAdd = 0, realwordAdd = 0;
 			DocData docdata;
@@ -162,7 +162,7 @@ void writeSearchingLog(const char* logfname, const char* docidxorfname, FILE* fb
 			//To get info of word from barrel, we need docAdd + wordAdd
 			realwordAdd = sddata->wordAddArray[i].wordAdd + docAdd;
 			WData wdata = getWordData(fbarrel, realwordAdd);
-			fprintf(flog, "%ls - tf: %lf\n", wdata.word, wdata.tf);
+			fprintf(flog, "%ls-tf:%lf\n", wdata.word, wdata.tf);
 			for (int i = 0; i < wdata.npos; i++) fprintf(flog, "%d ", wdata.posarray[i]);
 			fprintf(flog, "\n");
 			free(wdata.word);
@@ -278,16 +278,14 @@ short getKeyWordPos(SNode* eleMinInterval) {
 }
 
 /*	Evaluate the minimal interval by the formula
-*	- Let scorePerInterval is ([#matched keywords] / [#query keywords])^[Exponential for matched token]
+*	- Let matchedTokenScore is ([#matched keywords] / [#query keywords])^[Exponential for matched token]
 *	- Let orderPairsCount is [#ordered pair] in which the subtraction of two consecutive word in the interval must be larger the zero and smaller than [Distance for ordered pair]
-*	If the distance between leftmost and rightmost tokens smaller than a distance d then
-*		[Proximity score for given minimal interval] = 2*[orderPairsCount]*[scorePerInterval] + [scorePerInterval]
-*	else 
-*		[Proximity score for given minimal interval] = [orderPairsCount]*[scorePerInterval]
+*	- Let orderPairScore is [orderPairsCount]^[Exponential order pair]
+*	- Let distanceScore equals 0 if leftmost tokens is so far from rightmost tokens; or equals ([#matched tokens] - 1) / (rightmost position - leftmost position)
+*	The proximity score for a minimal interval is [matchedTokenScore] + [orderPairScore] + [weight]*[distanceScore]
 */
 float evalMinInterval(SList interval, int kQuerywords, Config config) {
 	float proximityScore = 0;
-	
 	EleMinInterval left = *(EleMinInterval*)interval.head->data;
 	EleMinInterval right = *(EleMinInterval*)findTail(interval)->data;
 	int orderedPairCount = 0;
@@ -300,17 +298,12 @@ float evalMinInterval(SList interval, int kQuerywords, Config config) {
 				orderedPairCount++;
 		}
 	}
-	//proximityScore += orderedPairCount * matchedTokenScore;
-	//if (right.position - left.position <= kQuerywords - 1 + config.DISTANCE_MINIMAL_INTERVAL) 
-	//	proximityScore += matchedTokenScore + orderedPairCount * matchedTokenScore;
 	float matchedTokenScore = pow(interval.size * 1.0 / kQuerywords, config.EXPONENTIAL_MATCHED_TOKEN);
 	float orderPairScore = pow(orderedPairCount, config.EXPONENTIAL_ORDER_PAIR);
 	float distanceScore = 0;
 	if (right.position - left.position <= interval.size - 1 + config.DISTANCE_MINIMAL_INTERVAL) {
 		distanceScore = (interval.size - 1) * 1.0 / (right.position - left.position);
 	}
-	if (orderPairScore > 0)
-		int a = 0;
 	proximityScore = matchedTokenScore + orderPairScore + config.WEIGHT_DISTANCE_MINIMAL_INTERVAL * distanceScore;
 	return proximityScore;
 }
