@@ -188,8 +188,8 @@ int rmvFileCorpus(lexicon& mainlex, DocIndexor& docidxor, Config config) {
     if (!doc) wprintf(L"Oops, file not found\n");
     else {
         int res = removeFile(doc->docId, docidxor, mainlex, config);
-        if (res == 0) wprintf(L"Successfully index new file\n");
-        else wprintf(L"Fail to index new file\n");
+        if (res == 0) wprintf(L"Successfully remove a file\n");
+        else wprintf(L"Fail to remove a file\n");
     }
 }
 
