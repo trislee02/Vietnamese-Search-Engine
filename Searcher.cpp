@@ -427,8 +427,6 @@ void computeScore2(FILE* fbarrel, const char* docidxorfname, SList& QDocList, in
 			free(wdata.word);
 			free(wdata.posarray);
 		}
-		if (sddata->docId == 3378)
-			int a = 6;
 		if (nQueryKeyword > 1) {
 			float proximityScore = computeProximityScore(posTable, nposArr, sddata->nword, nQueryKeyword, config);
 			score = tfscore * proximityScore;
