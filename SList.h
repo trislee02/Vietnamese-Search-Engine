@@ -53,3 +53,5 @@ void listcpy(SList& des, SList src, void* (*copyElement)(void*));
 void printList(SList& list, void (*print)(void*));
 
 void filterKfirst(SList& list, int k, void (*removeElement)(void* data));
+
+SNode* findDataBinary(SList list, void* data, int (*compare)(void*, void*));

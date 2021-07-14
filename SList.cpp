@@ -260,3 +260,31 @@ void filterKfirst(SList& list, int k, void (*removeElement)(void* data)) {
 	}
 	
 }
+
+SNode* findMiddle(SNode* start, SNode* last) {
+	if (!start) return NULL;
+	SNode* slow = start;
+	SNode* fast = start->next;
+	while (fast != last) {
+		fast = fast->next;
+		if (fast != last) {
+			fast = fast->next;
+			slow = slow->next;
+		}
+	}
+	return slow;
+}
+
+SNode* findDataBinary(SList list, void* data, int (*compare)(void*, void*)) {
+	SNode* start = list.head;
+	SNode* last = NULL;
+	do {
+		SNode* mid = findMiddle(start, last);
+		if (mid == NULL) return NULL;
+		int cmp = compare(mid->data, data);
+		if (cmp == 0) return mid;
+		else if (cmp < 0) last = mid;
+		else start = mid->next;
+	} while (last == NULL || last != start);
+	return NULL;
+}

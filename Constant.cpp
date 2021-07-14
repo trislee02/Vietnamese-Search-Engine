@@ -46,11 +46,14 @@ Config getConfigData(const char* configfname) {
 		else if (strcmp(str, DISTANCE_ORDERED_PAIR_KEY) == 0) {
 			fscanf(fconfig, "%d", &config.DISTANCE_ORDERED_PAIR);
 		}
-		else if (strcmp(str, EXPONENTIAL_PROXIMITY_KEY) == 0) {
-			fscanf(fconfig, "%d", &config.EXPONENTIAL_PROXIMITY);
+		else if (strcmp(str, EXPONENTIAL_ORDER_PAIR_KEY) == 0) {
+			fscanf(fconfig, "%d", &config.EXPONENTIAL_ORDER_PAIR);
 		}
 		else if (strcmp(str, THRESHOLD_TWO_STOP_WORD_KEY) == 0) {
 			fscanf(fconfig, "%f", &config.THRESHOLD_TWO_STOP_WORD);
+		}
+		else if (strcmp(str, WEIGHT_DISTANCE_MINIMAL_INTERVAL_KEY) == 0) {
+			fscanf(fconfig, "%f", &config.WEIGHT_DISTANCE_MINIMAL_INTERVAL);
 		}
 	}
 	fclose(fconfig);

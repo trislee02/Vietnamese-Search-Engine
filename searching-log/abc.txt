@@ -1,133 +1,133 @@
 Found 33 files
 -------------------------------
-Doc directory = corpus\Giao duc\GDu_VNE_ (8).txt, score = 0.016484
+DocId = 8198, Doc directory = corpus\Giao duc\GDu_VNE_ (8).txt, score = 0.016484
 abc - tf: 0.016484
 78 133 187 
 -------------------------------
-Doc directory = corpus\Hackers va Virus\HV_VNE_ (205).txt, score = 0.009302
+DocId = 8697, Doc directory = corpus\Hackers va Virus\HV_VNE_ (205).txt, score = 0.009302
 abc - tf: 0.009302
 36 149 
 -------------------------------
-Doc directory = corpus\Cuoc song do day\CSDD_VNE_ (94).txt, score = 0.006803
+DocId = 4883, Doc directory = corpus\Cuoc song do day\CSDD_VNE_ (94).txt, score = 0.006803
 abc - tf: 0.006803
 60 216 
 -------------------------------
-Doc directory = corpus\Giao duc\GDu_TN_ (472).txt, score = 0.006766
+DocId = 7662, Doc directory = corpus\Giao duc\GDu_TN_ (472).txt, score = 0.006766
 abc - tf: 0.006766
 23 74 141 212 469 
 -------------------------------
-Doc directory = corpus\San pham tin hoc moi\SPTHM_VNE_ (536).txt, score = 0.006536
+DocId = 12857, Doc directory = corpus\San pham tin hoc moi\SPTHM_VNE_ (536).txt, score = 0.006536
 abc - tf: 0.006536
 62 
 -------------------------------
-Doc directory = corpus\Giao duc\GDu_TT_ (576).txt, score = 0.006536
+DocId = 7766, Doc directory = corpus\Giao duc\GDu_TT_ (576).txt, score = 0.006536
 abc - tf: 0.006536
 126 
 -------------------------------
-Doc directory = corpus\Giai tri tin hoc\GTTH_TT_ (455).txt, score = 0.006515
+DocId = 6913, Doc directory = corpus\Giai tri tin hoc\GTTH_TT_ (455).txt, score = 0.006515
 abc - tf: 0.006515
 101 153 
 -------------------------------
-Doc directory = corpus\Cum ga\CG_TH_ (437).txt, score = 0.006329
+DocId = 4025, Doc directory = corpus\Cum ga\CG_TH_ (437).txt, score = 0.006329
 abc - tf: 0.006329
 353 354 
 -------------------------------
-Doc directory = corpus\San khau dien anh\SKDA_VNE_ (412).txt, score = 0.006250
+DocId = 11704, Doc directory = corpus\San khau dien anh\SKDA_VNE_ (412).txt, score = 0.006250
 abc - tf: 0.006250
 139 223 
 -------------------------------
-Doc directory = corpus\Giai tri tin hoc\GTTH_TT_ (482).txt, score = 0.006173
+DocId = 6940, Doc directory = corpus\Giai tri tin hoc\GTTH_TT_ (482).txt, score = 0.006173
 abc - tf: 0.006173
 332 361 492 
 -------------------------------
-Doc directory = corpus\Cuoc song do day\CSDD_VNE_ (87).txt, score = 0.004219
+DocId = 4875, Doc directory = corpus\Cuoc song do day\CSDD_VNE_ (87).txt, score = 0.004219
 abc - tf: 0.004219
 192 
 -------------------------------
-Doc directory = corpus\Hackers va Virus\HV_VNE_ (154).txt, score = 0.004167
+DocId = 8640, Doc directory = corpus\Hackers va Virus\HV_VNE_ (154).txt, score = 0.004167
 abc - tf: 0.004167
 98 
 -------------------------------
-Doc directory = corpus\Am nhac\AN_VNE_ (552).txt, score = 0.004000
+DocId = 526, Doc directory = corpus\Am nhac\AN_VNE_ (552).txt, score = 0.004000
 abc - tf: 0.004000
 265 
 -------------------------------
-Doc directory = corpus\San khau dien anh\SKDA_VNE_ (750).txt, score = 0.003899
+DocId = 12079, Doc directory = corpus\San khau dien anh\SKDA_VNE_ (750).txt, score = 0.003899
 abc - tf: 0.003899
 36 528 
 -------------------------------
-Doc directory = corpus\Am nhac\AN_VNE_ (124).txt, score = 0.003731
+DocId = 51, Doc directory = corpus\Am nhac\AN_VNE_ (124).txt, score = 0.003731
 abc - tf: 0.003731
 268 
 -------------------------------
-Doc directory = corpus\Giai tri tin hoc\GTTH_TT_ (165).txt, score = 0.003279
+DocId = 6623, Doc directory = corpus\Giai tri tin hoc\GTTH_TT_ (165).txt, score = 0.003279
 abc - tf: 0.003279
 210 
 -------------------------------
-Doc directory = corpus\Giai tri tin hoc\GTTH_TT_ (438).txt, score = 0.003268
+DocId = 6896, Doc directory = corpus\Giai tri tin hoc\GTTH_TT_ (438).txt, score = 0.003268
 abc - tf: 0.003268
 168 
 -------------------------------
-Doc directory = corpus\San pham tin hoc moi\SPTHM_VNE_ (501).txt, score = 0.003049
+DocId = 12819, Doc directory = corpus\San pham tin hoc moi\SPTHM_VNE_ (501).txt, score = 0.003049
 abc - tf: 0.003049
 256 
 -------------------------------
-Doc directory = corpus\Du hoc\DH_VNE_ (577).txt, score = 0.002950
+DocId = 5503, Doc directory = corpus\Du hoc\DH_VNE_ (577).txt, score = 0.002950
 abc - tf: 0.002950
 104 
 -------------------------------
-Doc directory = corpus\San pham tin hoc moi\SPTHM_VNE_ (167).txt, score = 0.002801
+DocId = 12447, Doc directory = corpus\San pham tin hoc moi\SPTHM_VNE_ (167).txt, score = 0.002801
 abc - tf: 0.002801
 244 
 -------------------------------
-Doc directory = corpus\San khau dien anh\SKDA_VNE_ (879).txt, score = 0.002717
+DocId = 12221, Doc directory = corpus\San khau dien anh\SKDA_VNE_ (879).txt, score = 0.002717
 abc - tf: 0.002717
 216 
 -------------------------------
-Doc directory = corpus\Thoi trang\TT_VNE_ (307).txt, score = 0.002392
+DocId = 14256, Doc directory = corpus\Thoi trang\TT_VNE_ (307).txt, score = 0.002392
 abc - tf: 0.002392
 391 
 -------------------------------
-Doc directory = corpus\Loi song\LS_TT_ (134).txt, score = 0.002227
+DocId = 10646, Doc directory = corpus\Loi song\LS_TT_ (134).txt, score = 0.002227
 abc - tf: 0.002227
 209 
 -------------------------------
-Doc directory = corpus\Am nhac\AN_VNE_ (600).txt, score = 0.002128
+DocId = 580, Doc directory = corpus\Am nhac\AN_VNE_ (600).txt, score = 0.002128
 abc - tf: 0.002128
 223 
 -------------------------------
-Doc directory = corpus\Hackers va Virus\HV_VNE_ (253).txt, score = 0.001927
+DocId = 8750, Doc directory = corpus\Hackers va Virus\HV_VNE_ (253).txt, score = 0.001927
 abc - tf: 0.001927
 441 
 -------------------------------
-Doc directory = corpus\Am nhac\AN_VNE_ (199).txt, score = 0.001818
+DocId = 133, Doc directory = corpus\Am nhac\AN_VNE_ (199).txt, score = 0.001818
 abc - tf: 0.001818
 188 
 -------------------------------
-Doc directory = corpus\Hackers va Virus\HV_VNE_ (224).txt, score = 0.001686
+DocId = 8718, Doc directory = corpus\Hackers va Virus\HV_VNE_ (224).txt, score = 0.001686
 abc - tf: 0.001686
 675 
 -------------------------------
-Doc directory = corpus\San khau dien anh\SKDA_VNE_ (601).txt, score = 0.001600
+DocId = 11914, Doc directory = corpus\San khau dien anh\SKDA_VNE_ (601).txt, score = 0.001600
 abc - tf: 0.001600
 720 
 -------------------------------
-Doc directory = corpus\San pham tin hoc moi\SPTHM_VNE_ (36).txt, score = 0.001587
+DocId = 12661, Doc directory = corpus\San pham tin hoc moi\SPTHM_VNE_ (36).txt, score = 0.001587
 abc - tf: 0.001587
 718 
 -------------------------------
-Doc directory = corpus\San khau dien anh\SKDA_VNE_ (573).txt, score = 0.001271
+DocId = 11882, Doc directory = corpus\San khau dien anh\SKDA_VNE_ (573).txt, score = 0.001271
 abc - tf: 0.001271
 125 
 -------------------------------
-Doc directory = corpus\Giao duc\GDu_NLD_ (724).txt, score = 0.001163
+DocId = 7534, Doc directory = corpus\Giao duc\GDu_NLD_ (724).txt, score = 0.001163
 abc - tf: 0.001163
 533 
 -------------------------------
-Doc directory = corpus\Giai tri tin hoc\GTTH_TT_ (189).txt, score = 0.000888
+DocId = 6647, Doc directory = corpus\Giai tri tin hoc\GTTH_TT_ (189).txt, score = 0.000888
 abc - tf: 0.000888
 702 
 -------------------------------
-Doc directory = corpus\Cum ga\CG_TH_ (296).txt, score = 0.000643
+DocId = 3868, Doc directory = corpus\Cum ga\CG_TH_ (296).txt, score = 0.000643
 abc - tf: 0.000643
 776 

@@ -36,7 +36,8 @@ int Menu()
     wprintf(L"* 1    *  Index                                   *\n");
     wprintf(L"* 2    *  Search                                  *\n");
     wprintf(L"* 3    *  Modify corpus                           *\n");
-    wprintf(L"* 4    *  Exit                                    *\n");
+    wprintf(L"* 4    *  Refresh config                          *\n");
+    wprintf(L"* 5    *  Exit                                    *\n");
     wprintf(L"***************************************************\n");
     wprintf(L"Your option: ");
     wscanf(L"%d", &choice);
@@ -64,7 +65,7 @@ void Search(lexicon mainlex, DocIndexor docidxor, Config config)
     getchar();
     wprintf(L"========================= VNSE Search Engine =========================\n");
     wprintf(L"     The more meaningful keywords are, the faster the response is\n");
-    wprintf(L"===========================================++=========================\n");
+    wprintf(L"======================================================================\n");
     int x, k;
     SList tokens;
     initialize(tokens);
@@ -209,6 +210,21 @@ void ModifyCorpus(lexicon& mainlex, DocIndexor& docidxor, Config config) {
     } while (choice > 0 && choice < 4);
 }
 
+void refreshConfig(Config& config) {
+    config = getConfigData(CONFIG_FILE);
+    wprintf(L"Completed refresh config\n");
+    wprintf(L"---------- Current configure ----------\n");
+    wprintf(L"K best document             %d\n", config.K_BEST_DOC_DEFAULT);
+    wprintf(L"Threshold stop word         %f\n", config.THRESHOLD_STOP_WORD);
+    wprintf(L"Threshold two stop words    %f\n", config.THRESHOLD_TWO_STOP_WORD);
+    wprintf(L"Distance minimal interval   %d\n", config.DISTANCE_MINIMAL_INTERVAL);
+    wprintf(L"Distance ordered pair       %d\n", config.DISTANCE_ORDERED_PAIR);
+    wprintf(L"Exponential matched token   %d\n", config.EXPONENTIAL_MATCHED_TOKEN);
+    wprintf(L"Exponential order pair      %d\n", config.EXPONENTIAL_ORDER_PAIR);
+    wprintf(L"Weight distance interval    %f\n", config.WEIGHT_DISTANCE_MINIMAL_INTERVAL);
+    wprintf(L"---------------------------------------\n");
+}
+
 void Run()
 {
     int choice = 0;
@@ -224,9 +240,10 @@ void Run()
         if (choice == 1) Indexing(mainlex, config);
         else if (choice == 2) Search(mainlex, docidxor, config);
         else if (choice == 3) ModifyCorpus(mainlex, docidxor, config);
-        else if (choice == 4) {
+        else if (choice == 4) refreshConfig(config);
+        else if (choice == 5) {
             sayGoodbye();
             break;
         }
-    } while (choice > 0 && choice < 5);
+    } while (choice > 0 && choice < 6);
 }

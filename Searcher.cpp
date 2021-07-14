@@ -134,10 +134,9 @@ void addDoc2QDocList(SList& QDoclist, WDData wddata) {
 		sddata.score = 0;
 		sddata.wordAddArray = new WDData[10];
 		sddata.wordAddArray[0] = wddata;
-		//Add a new doc to QDocList and keep ascendant  by docId
-		addKeepOrder(QDoclist, &sddata, sizeof(SDData), cmpSDDataDocId);
+		//Add a new doc to QDocList and keep ascendant by docId
+		addHead(QDoclist, &sddata, sizeof(SDData));
 	}
-	
 }
 
 /*	Write searching log to file
@@ -154,7 +153,7 @@ void writeSearchingLog(const char* logfname, const char* docidxorfname, FILE* fb
 		SDData* sddata = (SDData*)cur->data;
 		DocData docdata = *getDocDatabyId(docidxor.docarray, docidxor.ndocs, sddata->docId);
 		fprintf(flog, "-------------------------------\n", sddata->docId);
-		fprintf(flog, "Doc directory = %s, score = %f\n", docdata.docdir, sddata->score);
+		fprintf(flog, "DocId = %d, Doc directory = %s, score = %f\n", docdata.docId, docdata.docdir, sddata->score);
 		for (int i = 0; i < sddata->nword; i++) {
 			int docAdd = 0, realwordAdd = 0;
 			DocData docdata;
@@ -288,19 +287,31 @@ short getKeyWordPos(SNode* eleMinInterval) {
 */
 float evalMinInterval(SList interval, int kQuerywords, Config config) {
 	float proximityScore = 0;
-	float scorePerInterval = pow(interval.size * 1.0 / kQuerywords, config.EXPONENTIAL_MATCHED_TOKEN);
+	
 	EleMinInterval left = *(EleMinInterval*)interval.head->data;
 	EleMinInterval right = *(EleMinInterval*)findTail(interval)->data;
 	int orderedPairCount = 0;
 	for (SNode* cur = interval.head; cur->next; cur = cur->next) {
 		EleMinInterval word1 = *(EleMinInterval*)cur->data;
 		EleMinInterval word2 = *(EleMinInterval*)cur->next->data;
-		int distance = word2.position - word1.position;
-		if (distance > 0 && distance < config.DISTANCE_ORDERED_PAIR)
-			orderedPairCount++;
+		if (word2.keywordNo - word1.keywordNo == 1) {
+			int distance = word2.position - word1.position - 1;
+			if (distance >= 0 && distance <= config.DISTANCE_ORDERED_PAIR)
+				orderedPairCount++;
+		}
 	}
-	proximityScore += orderedPairCount * scorePerInterval;
-	if (right.position - left.position <= kQuerywords - 1 + config.DISTANCE_MINIMAL_INTERVAL) proximityScore += scorePerInterval + orderedPairCount * scorePerInterval;
+	//proximityScore += orderedPairCount * matchedTokenScore;
+	//if (right.position - left.position <= kQuerywords - 1 + config.DISTANCE_MINIMAL_INTERVAL) 
+	//	proximityScore += matchedTokenScore + orderedPairCount * matchedTokenScore;
+	float matchedTokenScore = pow(interval.size * 1.0 / kQuerywords, config.EXPONENTIAL_MATCHED_TOKEN);
+	float orderPairScore = pow(orderedPairCount, config.EXPONENTIAL_ORDER_PAIR);
+	float distanceScore = 0;
+	if (right.position - left.position <= interval.size - 1 + config.DISTANCE_MINIMAL_INTERVAL) {
+		distanceScore = (interval.size - 1) * 1.0 / (right.position - left.position);
+	}
+	if (orderPairScore > 0)
+		int a = 0;
+	proximityScore = matchedTokenScore + orderPairScore + config.WEIGHT_DISTANCE_MINIMAL_INTERVAL * distanceScore;
 	return proximityScore;
 }
 
@@ -395,7 +406,7 @@ void computeScore1(FILE* fbarrel, const char* docidxorfname, SList& QDocList) {
 *	Base on tf and proximity
 *	[Final score of a doc] = (Total of [TF]) * [Proximity for a doc] 
 */
-void computeScore2(FILE* fbarrel, const char* docidxorfname, SList& QDocList, int nKeywords, Config config) {
+void computeScore2(FILE* fbarrel, const char* docidxorfname, SList& QDocList, int nQueryKeyword, Config config) {
 	if (isEmpty(QDocList)) return;
 	DocIndexor docidxor = readDocIndexor(docidxorfname);
 	int ndocs = docidxor.ndocs;
@@ -423,8 +434,13 @@ void computeScore2(FILE* fbarrel, const char* docidxorfname, SList& QDocList, in
 			free(wdata.word);
 			free(wdata.posarray);
 		}
-		score = tfscore * computeProximityScore(posTable, nposArr, sddata->nword, nKeywords, config) * config.EXPONENTIAL_PROXIMITY;
-		if (score == 0) score = tfscore;
+		if (sddata->docId == 3378)
+			int a = 6;
+		if (nQueryKeyword > 1) {
+			float proximityScore = computeProximityScore(posTable, nposArr, sddata->nword, nQueryKeyword, config);
+			score = tfscore * proximityScore;
+		}
+		else score = tfscore;
 		for (int i = 0; i < sddata->nword; i++) free(posTable[i]);
 		free(posTable);
 		free(nposArr);

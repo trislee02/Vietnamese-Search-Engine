@@ -25,7 +25,8 @@
 #define DISTANCE_MINIMAL_INTERVAL_KEY "distance-minimal-interval"
 #define EXPONENTIAL_MATCHED_TOKEN_KEY "exponential-matched-token"
 #define DISTANCE_ORDERED_PAIR_KEY "distance-ordered-pair"
-#define EXPONENTIAL_PROXIMITY_KEY "exponential-proximity"
+#define EXPONENTIAL_ORDER_PAIR_KEY "exponential-order-pair"
+#define WEIGHT_DISTANCE_MINIMAL_INTERVAL_KEY "weight-distance-minimal-interval"
 
 #define WRITE_SEARCHING_LOG_KEY "write-searching-log"
 
