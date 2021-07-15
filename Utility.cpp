@@ -153,7 +153,8 @@ void freeDocIndexor(void* a) {
 
 void printTokenData(void* a) {
     TokenData* tokData = (TokenData*)a;
-    wprintf(L"%ls (%d)\n", tokData->word, tokData->position);
+    //wprintf(L"%ls (%d)\n", tokData->word, tokData->position);
+    wprintf(L"%ls ", tokData->word, tokData->position);
 }
 
 void freeTokenData(void* a) {

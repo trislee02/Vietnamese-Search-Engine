@@ -294,14 +294,15 @@ float evalMinInterval(SList interval, int kQuerywords, Config config) {
 		EleMinInterval word2 = *(EleMinInterval*)cur->next->data;
 		if (word2.keywordNo - word1.keywordNo == 1) {
 			int distance = word2.position - word1.position - 1;
-			if (distance >= 0 && distance <= config.DISTANCE_ORDERED_PAIR)
+			if (distance > 0 && distance <= config.DISTANCE_ORDERED_PAIR)
 				orderedPairCount++;
 		}
 	}
 	float matchedTokenScore = pow(interval.size * 1.0 / kQuerywords, config.EXPONENTIAL_MATCHED_TOKEN);
 	float orderPairScore = pow(orderedPairCount, config.EXPONENTIAL_ORDER_PAIR);
 	float distanceScore = 0;
-	if (right.position - left.position <= interval.size - 1 + config.DISTANCE_MINIMAL_INTERVAL) {
+	int distanceMinInterval = right.position - left.position;
+	if (distanceMinInterval > 0 && distanceMinInterval <= interval.size - 1 + config.DISTANCE_MINIMAL_INTERVAL) {
 		distanceScore = (interval.size - 1) * 1.0 / (right.position - left.position);
 	}
 	proximityScore = matchedTokenScore + orderPairScore + config.WEIGHT_DISTANCE_MINIMAL_INTERVAL * distanceScore;

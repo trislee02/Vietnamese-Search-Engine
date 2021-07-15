@@ -26,6 +26,8 @@ WAData* saveBarrel(FILE* fbarrel, WData* wordarray, int n, int& docAdd);
 
 void saveLex(FILE* flex, lexicon lex);
 
+WData* preprocessFile(char* filename, int& nword, lexicon stopwordlex, Config config);
+
 void adtWAdd2Lex(lexicon& lex, int docId, WAData* addressArray, int n);
 
 void saveDoclist2BIndexor(FILE* fbarrelidxor, Doclist* doclist, int& dlistAdd);

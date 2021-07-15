@@ -1,3 +1,0 @@
-corpus\doc1.txt
-corpus\doc2.txt
-corpus\doc3.txt
