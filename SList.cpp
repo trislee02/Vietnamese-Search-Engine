@@ -222,21 +222,18 @@ void mergesort(SList& list, int (*compare)(void*, void*), int condition) {
 	mergeSortedList(list, secpart, compare, condition);
 }
 
-void listcpy(SList& des, SList src, int (*element_size)(void *)) {
+void listcpy(SList& des, SList src, void* (*copyElement)(void *)) {
 	initialize(des);
 	if (isEmpty(src)) return;
-	addHead(des, src.head->data, element_size(src.head->data));
-	SNode* descur = des.head;
-	SNode* cur = src.head->next;
-	for (; cur; cur = cur->next, descur = descur->next) {
-		int data_size = element_size(cur->data);
+	SNode* descur = (SNode*) malloc(sizeof(SNode));
+	descur->data = copyElement(src.head->data);
+	descur->next = NULL;
+	des.head = descur;
+	for (SNode* cur = src.head->next; cur; cur = cur->next, descur = descur->next) {
 		SNode* node = (SNode*)malloc(sizeof(SNode));
-		node->data = malloc(data_size);
-		char* ptr = (char*) cur->data;
-		for (int i = 0; i < data_size; i++)
-			((char*)(node->data))[i] = ptr[i];
-		descur->next = node;
+		node->data = copyElement(cur->data);
 		node->next = NULL;
+		descur->next = node;
 	}
 	des.size = src.size;
 }
@@ -262,4 +259,32 @@ void filterKfirst(SList& list, int k, void (*removeElement)(void* data)) {
 		k--;
 	}
 	
+}
+
+SNode* findMiddle(SNode* start, SNode* last) {
+	if (!start) return NULL;
+	SNode* slow = start;
+	SNode* fast = start->next;
+	while (fast != last) {
+		fast = fast->next;
+		if (fast != last) {
+			fast = fast->next;
+			slow = slow->next;
+		}
+	}
+	return slow;
+}
+
+SNode* findDataBinary(SList list, void* data, int (*compare)(void*, void*)) {
+	SNode* start = list.head;
+	SNode* last = NULL;
+	do {
+		SNode* mid = findMiddle(start, last);
+		if (mid == NULL) return NULL;
+		int cmp = compare(mid->data, data);
+		if (cmp == 0) return mid;
+		else if (cmp < 0) last = mid;
+		else start = mid->next;
+	} while (last == NULL || last != start);
+	return NULL;
 }

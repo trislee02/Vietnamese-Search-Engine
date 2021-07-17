@@ -1,23 +1,36 @@
 #pragma once
-#define K_BEST_DOC_DEFAULT 100
-#define THRESHOLD 0.51
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "SList.h"
+#include "dataStruct.h"
 
 #define SUCCESS_MESSAGE L"Success\n"
 #define FAIL_MESSAGE L"Fail\n"
 
-#define INDEX_FILES "index.txt"
-#define STOPWORD_FILES "stopwords.txt"
-/*
-#define BARRELS_FILES "barrels-method-2.db"
-#define BARRELS_INDEXOR_FILES "barrelidxor-method-2.db"
-#define LEXICON_FILES "lexicon-method-2.db"
-#define SWLEX_FILES "stopword-lex-method-2.db"
-#define DOC_INDEXOR "doc-indexor-method-2.db"
-/************************************************/
+#define CONFIG_FILE "config/config.txt"
 
-#define BARRELS_FILES "barrels-method-1.db"
-#define BARRELS_INDEXOR_FILES "barrelidxor-method-1.db"
-#define LEXICON_FILES "lexicon-method-1.db"
-#define SWLEX_FILES "stopword-lex-method-1.db"
-#define DOC_INDEXOR "doc-indexor-method-1.db"
-/**************************************************/
+#define INDEX_FILES_KEY "index-file"
+#define STOPWORD_FILES_KEY "stopwords-file"
+
+#define BARRELS_FILES_KEY "barrels-filename"
+#define BARRELS_INDEXOR_FILES_KEY "barrel-indexor-filename"
+#define LEXICON_FILES_KEY "lexicon-filename"
+#define DOC_INDEXOR_KEY "doc-indexor-filename"
+
+#define THRESHOLD_STOP_WORD_KEY "threshold-stop-word"
+#define THRESHOLD_TWO_STOP_WORD_KEY "threshold-two-stop-word"
+
+#define K_BEST_DOC_KEY "k-best-doc"
+#define DISTANCE_MINIMAL_INTERVAL_KEY "distance-minimal-interval"
+#define EXPONENTIAL_MATCHED_TOKEN_KEY "exponential-matched-token"
+#define DISTANCE_ORDERED_PAIR_KEY "distance-ordered-pair"
+#define EXPONENTIAL_ORDER_PAIR_KEY "exponential-order-pair"
+#define WEIGHT_DISTANCE_MINIMAL_INTERVAL_KEY "weight-distance-minimal-interval"
+
+#define WRITE_SEARCHING_LOG_KEY "write-searching-log"
+
+
+Config getConfigData(const char* configfname);
+
+char* generateSearchingLogName(SList tokens);
