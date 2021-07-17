@@ -1,5 +1,18 @@
 #include "Utility.h"
 
+int cmpEleMinInterval(void* a, void* b) {
+    EleMinInterval* wordA = (EleMinInterval*)a;
+    EleMinInterval* wordB = (EleMinInterval*)b;
+    if (wordA->position < wordB->position) return 1;
+    if (wordA->position > wordB->position) return -1;
+    return 0;
+}
+
+void printEleMinInterval(void* a) {
+    EleMinInterval* word = (EleMinInterval*)a;
+    wprintf(L"%d (%d) ", word->keywordNo, word->position);
+}
+
 int cmpwchar(void* a, void* b) {
     wchar_t* stra = (wchar_t*)a;
     wchar_t* strb = (wchar_t*)b;
@@ -8,7 +21,7 @@ int cmpwchar(void* a, void* b) {
 
 void printwchar(void* a) {
     wchar_t* str = (wchar_t*)a;
-    wprintf(L"1-|%ls|\n", str);
+    wprintf(L"%ls ", str);
 }
 
 int wcharsize(void* a) {
@@ -33,10 +46,10 @@ void freeAddressArray(WAData* addressArray, int n) {
 
 void printDoclist(void* a) {
     Doclist* doclist = (Doclist*)a;
-    printf("Doclist: ");
+    wprintf(L"Doclist: ");
     for (int i = 0; i < doclist->ndoc; i++)
-        printf("%d: %d, ", (doclist->docArray)[i].docId, (doclist->docArray)[i].wordAdd);
-    printf("\n");
+        wprintf(L"%d: %d, ", (doclist->docArray)[i].docId, (doclist->docArray)[i].wordAdd);
+    wprintf(L"\n");
 }
 
 void freeDoclist(void* a) {
@@ -59,6 +72,8 @@ void freewldata(void* a) {
 
 void printWord(WData wd) {
     wprintf(L"%ls - tf: %lf\n", wd.word, wd.tf);
+    for (int i = 0; i < wd.npos; i++) wprintf(L"%d ", wd.posarray[i]);
+    wprintf(L"\n");
 }
 
 void printWordArray(WData* wordArray, int n) {
@@ -68,18 +83,26 @@ void printWordArray(WData* wordArray, int n) {
 }
 
 void freeWordArray(WData* wordArray, int n) {
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < n; i++) {
         free(wordArray[i].word);
+        free(wordArray[i].posarray);
+    }
     free(wordArray);
 }
 
 void printSDData(void* a) {
     SDData* ddata = (SDData*)a;
-    printf("SDData:\nDocId = %d Score = %f nword = %d\n", ddata->docId, ddata->score, ddata->nword);
+    wprintf(L"SDData:\nDocId = %d Score = %f nword = %d\n", ddata->docId, ddata->score, ddata->nword);
 
     for (int i = 0; i < ddata->nword; i++) {
-        printf("wordAdd = %d\n", ddata->wordAddArray[i].wordAdd);
+        wprintf(L"wordAdd = %d\n", ddata->wordAddArray[i].wordAdd);
     }
+}
+
+void freeSDData(void* a) {
+    SDData* ddata = (SDData*)a;
+    free(ddata->wordAddArray);
+    free(ddata);
 }
 
 wchar_t* chr2wchr(const char* c)
@@ -121,4 +144,36 @@ void printDocIndexor(DocIndexor docidxor) {
         wprintf(L"docId = %d, dir = %s, nword = %d\n", docArray[i].docId, tempfname, docArray[i].nword);
         free(tempfname);
     }
+}
+
+void freeDocIndexor(void* a) {
+    DocIndexor* docidxor = (DocIndexor*)a;
+    freeDocArray(docidxor->docarray, docidxor->ndocs);
+}
+
+void printTokenData(void* a) {
+    TokenData* tokData = (TokenData*)a;
+    //wprintf(L"%ls (%d)\n", tokData->word, tokData->position);
+    wprintf(L"%ls ", tokData->word, tokData->position);
+}
+
+void freeTokenData(void* a) {
+    TokenData* tokData = (TokenData*)a;
+    free(tokData->word);
+    free(tokData);
+}
+
+void* copyTokenData(void* a) {
+    TokenData* tokenData = (TokenData*)a;
+    TokenData* copiedtokenData = new TokenData;
+    copiedtokenData->position = tokenData->position;
+    copiedtokenData->word = new wchar_t[wcslen(tokenData->word) + 1];
+    wcscpy(copiedtokenData->word, tokenData->word);
+    return copiedtokenData;
+}
+
+wchar_t* cpywchar(wchar_t* a) {
+    wchar_t* res = new wchar_t[wcslen(a) + 1];
+    wcscpy(res, a);
+    return res;
 }

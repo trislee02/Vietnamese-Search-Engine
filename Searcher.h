@@ -5,7 +5,10 @@
 #include "dataStruct.h"
 #include "Constant.h"
 
+
 lexicon readLexicon(FILE* f);
+
+lexicon readLexicon(const char* lexfname);
 
 WLData* getWLData(lexicon lex, wchar_t* word);
 
@@ -17,6 +20,8 @@ WData* getWordArray(FILE* fbarrel, int nword, int docAdd);
 
 WData getWordData(FILE* fbarrel, int wordAdd);
 
+void addDoc2QDocList(SList& QDoclist, WDData wddata);
+
 SList searchAQuery(lexicon mainlex, FILE* fbarrelidxor, FILE* fbarrel, SList token);
 
 DocIndexor readDocIndexor(const char* didxorfname);
@@ -27,7 +32,7 @@ DocData* getDocDatabyId(DocData* docArray, int ndocs, int docId);
 
 DocData* getDocDatabyDir(DocIndexor docidxor, const char* dir);
 
-void calculateScore(FILE* fbarrel, const char* docidxorfname, SList& QDocList);
+void calculateScore(FILE* fbarrel, const char* docidxorfname, SList& QDocList, int nKeywords, Config config);
 
 void rankDoc(SList& QDocList);
 
@@ -35,4 +40,4 @@ int getDocId(void* ddata);
 
 float getDocScore(void* ddata);
 
-SList doSearching(lexicon mainlex, SList tokens, int k);
+SList doSearching(lexicon mainlex, SList tokens, Config config);

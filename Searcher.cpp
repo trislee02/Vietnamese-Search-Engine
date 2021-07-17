@@ -28,6 +28,22 @@ lexicon readLexicon(FILE* f) {
 	return lex;
 }
 
+/*	Read the lexicon from file name
+*	Return a lexicon and the adapter of tnode will be wldata
+*/
+lexicon readLexicon(const char* lexfname) {
+	lexicon lex;
+	init(lex);
+	FILE* flex = fopen(lexfname, "rb");
+	if (!flex) return lex;
+	lex = readLexicon(flex);
+	fclose(flex);
+	return lex;
+}
+
+/*	Get WLData of a word in a lexicon
+*	Return a pointer to that wldata
+*/
 WLData* getWLData(lexicon lex, wchar_t* word) {
 	tnode* charNode = NULL;
 	if ((charNode = findString(lex, word))) {
@@ -72,6 +88,9 @@ WData* getWordArray(FILE* fbarrel, int nword, int docAdd) {
 		wordArray[i].word = new wchar_t[nchar + 1];
 		fread(wordArray[i].word, sizeof(wchar_t), nchar + 1, fbarrel);
 		fread(&wordArray[i].tf, sizeof(float), 1, fbarrel);
+		fread(&wordArray[i].npos, sizeof(short), 1, fbarrel);
+		wordArray[i].posarray = new short[wordArray[i].npos];
+		fread(wordArray[i].posarray, sizeof(short), wordArray[i].npos, fbarrel);
 	}
 	return wordArray;
 }
@@ -89,10 +108,13 @@ WData getWordData(FILE* fbarrel, int wordAdd) {
 	wdata.word = new wchar_t[nchar + 1];
 	fread(wdata.word, sizeof(wchar_t), nchar + 1, fbarrel);
 	fread(&wdata.tf, sizeof(wdata.tf), 1, fbarrel);
+	fread(&wdata.npos, sizeof(short), 1, fbarrel);
+	wdata.posarray = new short[wdata.npos];
+	fread(wdata.posarray, sizeof(short), wdata.npos, fbarrel);
 	return wdata;
 }
 
-/*	Add a word to QDocList
+/*	Add a word in a doc to QDocList
 */
 void addDoc2QDocList(SList& QDoclist, WDData wddata) {
 	int docId = wddata.docId;
@@ -106,16 +128,50 @@ void addDoc2QDocList(SList& QDoclist, WDData wddata) {
 	}
 	else {
 		//In default, the score of the doc is zero
-		SDData* sddata = new SDData;
-		sddata->docId = docId;
-		sddata->nword = 1;
-		sddata->score = 0;
-		sddata->wordAddArray = new WDData[10];
-		sddata->wordAddArray[0] = wddata;
-		//Add a new doc to QDocList and keep ascendant  by docId
-		addKeepOrder(QDoclist, sddata, sizeof(SDData), cmpSDDataDocId);
+		SDData sddata;
+		sddata.docId = docId;
+		sddata.nword = 1;
+		sddata.score = 0;
+		sddata.wordAddArray = new WDData[10];
+		sddata.wordAddArray[0] = wddata;
+		//Add a new doc to QDocList and keep ascendant by docId
+		addHead(QDoclist, &sddata, sizeof(SDData));
 	}
-	
+}
+
+/*	Write searching log to file
+*/
+void writeSearchingLog(const char* logfname, const char* docidxorfname, FILE* fbarrel, SList QDocList) {
+	if (isEmpty(QDocList)) return;
+	FILE* flog = fopen(logfname, "w");
+	DocIndexor docidxor = readDocIndexor(docidxorfname);
+	int ndocs = docidxor.ndocs;
+	DocData* docArray = docidxor.docarray;
+	if (!docArray) return;
+	fprintf(flog, "Found %d files\n", QDocList.size);
+	for (SNode* cur = QDocList.head; cur; cur = cur->next) {
+		SDData* sddata = (SDData*)cur->data;
+		DocData docdata = *getDocDatabyId(docidxor.docarray, docidxor.ndocs, sddata->docId);
+		fprintf(flog, "\n", sddata->docId);
+		fprintf(flog, "%s, %f\n", docdata.docdir, sddata->score);
+		for (int i = 0; i < sddata->nword; i++) {
+			int docAdd = 0, realwordAdd = 0;
+			DocData docdata;
+			if (getDocDatabyId(docArray, ndocs, docdata, sddata->docId) < 0) continue;
+			docAdd = docdata.docAdd;
+			//To get info of word from barrel, we need docAdd + wordAdd
+			realwordAdd = sddata->wordAddArray[i].wordAdd + docAdd;
+			WData wdata = getWordData(fbarrel, realwordAdd);
+			fprintf(flog, "%ls-tf:%lf\n", wdata.word, wdata.tf);
+			for (int i = 0; i < wdata.npos; i++) fprintf(flog, "%d ", wdata.posarray[i]);
+			fprintf(flog, "\n");
+			free(wdata.word);
+			free(wdata.posarray);
+		}
+	}
+
+	freeDocArray(docArray, ndocs);
+	fclose(flog);
 }
 
 /*	Search a query
@@ -131,7 +187,6 @@ SList searchAQuery(lexicon mainlex, FILE* fbarrelidxor, FILE* fbarrel, SList tok
 		tnode* tn = findString(mainlex, word);
 		if (tn) {
 			Doclist* doclist = getDoclist(fbarrelidxor, *(WLData*)tn->adapter);
-			//printDoclist(doclist);
 			for (int i = 0; i < doclist->ndoc; i++) {
 				addDoc2QDocList(QDocList, (doclist->docArray)[i]);
 			}
@@ -184,6 +239,8 @@ int getDocDatabyId(DocData* docArray, int ndocs, DocData& docdata, int docId) {
 	return -1;
 }
 
+/*	Find and return a pointer to docData of a docArray in a DocIndexor
+*/
 DocData* getDocDatabyDir(DocIndexor docidxor, const char* dir) {
 	for (int i = 0; i < docidxor.ndocs; i++) if (strcmp(docidxor.docarray[i].docdir, dir) == 0) return &docidxor.docarray[i];
 	return NULL;
@@ -199,10 +256,121 @@ DocData* getDocDatabyId(DocData* docArray, int ndocs, int docId) {
 	return NULL;
 }
 
-/*	Calculate the score for QDocList.
-*	Update the QDoclist.
+/*	Copy posArray of WData
 */
-void calculateScore(FILE* fbarrel, const char* docidxorfname, SList& QDocList) {
+void* copyPosArray(WData wdata, int &npos) {
+	npos = wdata.npos;
+	short* posarray = new short[npos];
+	memcpy(posarray, wdata.posarray, sizeof(short) * npos);
+	return posarray;
+}
+
+/*	Get the keywordNo of a Element Minimal Interval
+*/
+int getkeywordNo(SNode* eleMinInterval) {
+	return ((EleMinInterval*)eleMinInterval->data)->keywordNo;
+}
+
+/*	Get the keywordPos of a Element Minimal Interval
+*/
+short getKeyWordPos(SNode* eleMinInterval) {
+	return ((EleMinInterval*)eleMinInterval->data)->position;
+}
+
+/*	Evaluate the minimal interval by the formula
+*	- Let matchedTokenScore is ([#matched keywords] / [#query keywords])^[Exponential for matched token]
+*	- Let orderPairsCount is [#ordered pair] in which the subtraction of two consecutive word in the interval must be larger the zero and smaller than [Distance for ordered pair]
+*	- Let orderPairScore is [orderPairsCount]^[Exponential order pair]
+*	- Let distanceScore equals 0 if leftmost tokens is so far from rightmost tokens; or equals ([#matched tokens] - 1) / (rightmost position - leftmost position)
+*	The proximity score for a minimal interval is [matchedTokenScore] + [orderPairScore] + [weight]*[distanceScore]
+*/
+float evalMinInterval(SList interval, int kQuerywords, Config config) {
+	float proximityScore = 0;
+	EleMinInterval left = *(EleMinInterval*)interval.head->data;
+	EleMinInterval right = *(EleMinInterval*)findTail(interval)->data;
+	int orderedPairCount = 0;
+	for (SNode* cur = interval.head; cur->next; cur = cur->next) {
+		EleMinInterval word1 = *(EleMinInterval*)cur->data;
+		EleMinInterval word2 = *(EleMinInterval*)cur->next->data;
+		if (word2.keywordNo - word1.keywordNo == 1) {
+			int distance = word2.position - word1.position - 1;
+			if (distance > 0 && distance <= config.DISTANCE_ORDERED_PAIR)
+				orderedPairCount++;
+		}
+	}
+	float matchedTokenScore = pow(interval.size * 1.0 / kQuerywords, config.EXPONENTIAL_MATCHED_TOKEN);
+	float orderPairScore = pow(orderedPairCount, config.EXPONENTIAL_ORDER_PAIR);
+	float distanceScore = 0;
+	int distanceMinInterval = right.position - left.position;
+	if (distanceMinInterval > 0 && distanceMinInterval <= interval.size - 1 + config.DISTANCE_MINIMAL_INTERVAL) {
+		distanceScore = (interval.size - 1) * 1.0 / (right.position - left.position);
+	}
+	proximityScore = matchedTokenScore + orderPairScore + config.WEIGHT_DISTANCE_MINIMAL_INTERVAL * distanceScore;
+	return proximityScore;
+}
+
+/*	Get the position of top element of a list of a token
+*/
+short getTopElement(short** posTable, short* nposArr, short* indexposArr, int keywordNo) {
+	short* keywordPosList = posTable[keywordNo];
+	short* topEle = &indexposArr[keywordNo];
+	short pos = keywordPosList[*topEle];
+	(*topEle)++;
+	return pos;
+}
+
+/*  Implement algorithm for k-Word proximity search
+*   Positions list of every keywords should be sorted before calling this function
+*	[Proximity score for a doc] = Average of total [Proximity score for a interval]
+*/
+float computeProximityScore(short** posTable, short* nposArr, int kKeywords, int kQueryWords, Config config) {
+	if (kKeywords < 2) return 0;
+	float proximityScore = 0.0;
+	EleMinInterval left, right;
+	SList interval;
+	initialize(interval);
+	short* indexposArr = new short[kKeywords];
+	for (int i = 0; i < kKeywords; i++) indexposArr[i] = 0;
+	//Pop top elements of each list
+	for (int i = 0; i < kKeywords; i++) {
+		if (indexposArr[i] >= nposArr[i]) return -1;
+		short pos = getTopElement(posTable, nposArr, indexposArr, i);
+		EleMinInterval keyword = { i, pos };
+		addKeepOrder(interval, &keyword, sizeof(EleMinInterval), cmpEleMinInterval);
+	}
+	int minIntervalCount = 1;
+	left = *(EleMinInterval*)interval.head->data;
+	right = *(EleMinInterval*)findTail(interval)->data;
+	//Check for current list of the leftmost keyword in P, where P is the invertal list, is empty
+	while (indexposArr[left.keywordNo] < nposArr[left.keywordNo]) {
+		short pos = getTopElement(posTable, nposArr, indexposArr, left.keywordNo);
+		EleMinInterval p = { left.keywordNo, pos };
+		EleMinInterval q = { getkeywordNo(interval.head->next), getKeyWordPos(interval.head->next) };
+		//If true, it is minimal interval, else it is not minimal interval
+		if (p.position > right.position) {
+			proximityScore += evalMinInterval(interval, kQueryWords, config);
+			removeHead(interval, free);
+			addTail(interval, &p, sizeof(EleMinInterval));
+			minIntervalCount++;
+		}
+		else {
+			removeHead(interval, free);
+			addKeepOrder(interval, &p, sizeof(EleMinInterval), cmpEleMinInterval);
+		}
+		left = *(EleMinInterval*)interval.head->data;
+		right = *(EleMinInterval*)findTail(interval)->data;
+	}
+	proximityScore += evalMinInterval(interval, kQueryWords, config);
+	proximityScore /= minIntervalCount;
+	removeAll(interval, free);
+	free(indexposArr);
+	return proximityScore;
+}
+
+/*	Compute the score for each doc in QDoclist - Method 1
+*	Base on tf only
+*/
+void computeScore1(FILE* fbarrel, const char* docidxorfname, SList& QDocList) {
 	if (isEmpty(QDocList)) return;
 	SNode* cur = QDocList.head;
 	DocIndexor docidxor = readDocIndexor(docidxorfname);
@@ -228,46 +396,112 @@ void calculateScore(FILE* fbarrel, const char* docidxorfname, SList& QDocList) {
 	freeDocArray(docArray, ndocs);
 }
 
+/*	Compute the score for each doc in QDoclist - Method 2
+*	Base on tf and proximity
+*	[Final score of a doc] = (Total of [TF]) * [Proximity for a doc] 
+*/
+void computeScore2(FILE* fbarrel, const char* docidxorfname, SList& QDocList, int nQueryKeyword, Config config) {
+	if (isEmpty(QDocList)) return;
+	DocIndexor docidxor = readDocIndexor(docidxorfname);
+	int ndocs = docidxor.ndocs;
+	DocData* docArray = docidxor.docarray;
+	if (!docArray) return;
+	for (SNode* cur = QDocList.head; cur; cur = cur->next) {
+		SDData* sddata = (SDData*)cur->data;
+		float score = 0.0;
+		float tfscore = 0.0;
+		short** posTable = new short* [sddata->nword];
+		short* nposArr = new short[sddata->nword];
+		for (int i = 0; i < sddata->nword; i++) {
+			int docAdd = 0, realwordAdd = 0;
+			DocData docdata;
+			if (getDocDatabyId(docArray, ndocs, docdata, sddata->docId) < 0) continue;
+			docAdd = docdata.docAdd;
+			//To get info of word from barrel, we need docAdd + wordAdd
+			realwordAdd = sddata->wordAddArray[i].wordAdd + docAdd;
+			WData wdata = getWordData(fbarrel, realwordAdd);
+			short* curTokenPosArray = wdata.posarray;
+			posTable[i] = new short[wdata.npos];
+			nposArr[i] = wdata.npos;
+			memcpy(posTable[i], curTokenPosArray, sizeof(short) * wdata.npos);
+			tfscore += wdata.tf;
+			free(wdata.word);
+			free(wdata.posarray);
+		}
+		if (nQueryKeyword > 1) {
+			float proximityScore = computeProximityScore(posTable, nposArr, sddata->nword, nQueryKeyword, config);
+			score = tfscore * proximityScore;
+		}
+		else score = tfscore;
+		for (int i = 0; i < sddata->nword; i++) free(posTable[i]);
+		free(posTable);
+		free(nposArr);
+		sddata->score = score;
+	}
+	freeDocIndexor(&docidxor);
+}
+
+/*	Calculate the score for QDocList.
+*	Update the QDoclist.
+*/
+void calculateScore(FILE* fbarrel, const char* docidxorfname, SList& QDocList, int nKeywords, Config config) {
+	computeScore2(fbarrel, docidxorfname, QDocList, nKeywords, config);
+}
+
+/*	Rank the doc in QDoclist	
+*	Base on score of score
+*/
 void rankDoc(SList& QDocList) { 
-	//Base on score of tf only
 	mergesort(QDocList, cmpSDDataScore, -1);
 }
 
-void freeSDData(void* a) {
-	SDData* ddata = (SDData*)a;
-	free(ddata->wordAddArray);
-	free(ddata);
-}
-
+/*	Filter the doc in QDoclist
+*	Base on score of score
+*/
 void filterDoc(SList& QDocList, int k) {
 	filterKfirst(QDocList, k, freeSDData);
 }
 
+/*	Get the docId of a SDData
+*/
 int getDocId(void* sddata) {
 	if (!sddata) return -1;
 	SDData* docdata = (SDData*)sddata;
 	return docdata->docId;
 }
 
+/*	Get the doc score of a SDData
+*/
 float getDocScore(void* sddata) {
 	if (!sddata) return -1;
 	SDData* docdata = (SDData*)sddata;
 	return docdata->score;
 }
 
-SList doSearching(lexicon mainlex, SList tokens, int k) {
+/*	Do searching from a given query tokens
+*/
+SList doSearching(lexicon mainlex, SList tokens, Config config) {
+	char* logfname = NULL;
+	if (config.WRITE_SEARCHING_LOG) 
+		logfname = generateSearchingLogName(tokens);
 
-	FILE* fmainlex = fopen(LEXICON_FILES, "rb");
-	FILE* fbarrelindexor = fopen(BARRELS_INDEXOR_FILES, "rb");
-	FILE* fbarrel = fopen(BARRELS_FILES, "rb");
-
+	FILE* fmainlex = fopen(config.LEXICON_FILES, "rb");
+	FILE* fbarrelindexor = fopen(config.BARRELS_INDEXOR_FILES, "rb");
+	FILE* fbarrel = fopen(config.BARRELS_FILES, "rb");
 	SList QDoclist = searchAQuery(mainlex, fbarrelindexor, fbarrel, tokens);
-	calculateScore(fbarrel, DOC_INDEXOR, QDoclist);
+	
+	calculateScore(fbarrel, config.DOC_INDEXOR, QDoclist, tokens.size, config);
 	rankDoc(QDoclist);
-	filterDoc(QDoclist, k);
+	if (config.WRITE_SEARCHING_LOG) {
+		wprintf(L"Writing searching log...\n");
+		writeSearchingLog(logfname, config.DOC_INDEXOR, fbarrel, QDoclist);
+		wprintf(L"Complete writing log file\n");
+	}
+	filterDoc(QDoclist, config.K_BEST_DOC_DEFAULT);
 
 	fclose(fmainlex);
 	fclose(fbarrelindexor);
 	fclose(fbarrel);
+	free(logfname);
 	return QDoclist;
 }

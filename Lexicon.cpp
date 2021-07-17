@@ -67,7 +67,7 @@ tnode* findString(lexicon lex, wchar_t* str) {
             curL = &(b->branch);  //Thay doi current List den list phia duoi
         }
     }
-    if (b->isWord)
+    if (b && b->isWord)
         return b;
     return NULL;
 }

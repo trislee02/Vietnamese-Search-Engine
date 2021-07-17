@@ -48,8 +48,10 @@ void mergeSortedList(SList& la, SList lb, int (*compare)(void*, void*), int cond
 
 void mergesort(SList& list, int (*compare)(void*, void*), int condition);
 
-void listcpy(SList& des, SList src, int (*element_size)(void*));
+void listcpy(SList& des, SList src, void* (*copyElement)(void*));
 
 void printList(SList& list, void (*print)(void*));
 
 void filterKfirst(SList& list, int k, void (*removeElement)(void* data));
+
+SNode* findDataBinary(SList list, void* data, int (*compare)(void*, void*));
