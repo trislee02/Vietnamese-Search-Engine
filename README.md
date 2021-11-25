@@ -5,7 +5,7 @@ Simple Search Engine for Vietnamese text
 This is my project in the **Programming Technique** course. In this project, I had to make a simple search engine for Vietnamese texts and write a report about it. You can read the paper written in Vietnamese [here](Report.pdf).
 
 ## Architecture
-Below is my general architecture. It was mainly based on this [Paper](http://infolab.stanford.edu/~backrub/google.html). For more insight, please refer to the [Slide](VNSE Introduction.pdf) or [Report](Report.pdf).
+Below is my general architecture. It was mainly based on this [Paper](http://infolab.stanford.edu/~backrub/google.html). For more insight, please refer to the [Slide](VNSE-Introduction.pdf) or [Report](Report.pdf).
 
 ## Getting Started
 
