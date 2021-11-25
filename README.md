@@ -7,6 +7,8 @@ This is my project in the **Programming Technique** course. In this project, I h
 ## Architecture
 Below is my general architecture. It was mainly based on this [Paper](http://infolab.stanford.edu/~backrub/google.html). For more insight, please refer to the [Slide](VNSE-Introduction.pdf) or [Report](Report.pdf).
 
+![Architecture](general-architecture.png)
+
 ## Getting Started
 
 ### Dependencies
